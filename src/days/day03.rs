@@ -1,27 +1,21 @@
 use std::vec;
 
 fn is_engine_char(ch: &char) -> bool {
-    if *ch == '.' {
-        return false;
-    } else {
-        return ch.to_digit(10).is_none();
-    }
+    *ch != '.' && ch.to_digit(10).is_none()
 }
 
 fn is_engine_gear(ch: &char) -> bool {
-    return *ch == '*';
+    *ch == '*'
 }
 
 fn find_gear_vector(
     coords_vec: &mut Vec<((usize, usize), Vec<u32>)>,
     target_coords: (usize, usize),
 ) -> Option<&mut Vec<u32>> {
-    for (coords, numbers) in coords_vec.iter_mut() {
-        if *coords == target_coords {
-            return Some(numbers);
-        }
-    }
-    None
+    coords_vec
+        .iter_mut()
+        .find(|(coords, _)| *coords == target_coords)
+        .map(|(_, numbers)| numbers)
 }
 
 fn is_part_of_schematic(
@@ -31,37 +25,36 @@ fn is_part_of_schematic(
     m: usize,
     n: usize,
 ) -> (bool, (usize, usize)) {
-    if i != 0 && j != 0 && is_engine_char(&matrix[i - 1][j - 1]) {
-        return (true, (i - 1, j - 1));
-    } else if i != 0 && is_engine_char(&matrix[i - 1][j]) {
-        return (true, (i - 1, j));
-    } else if i != 0 && j < n - 1 && is_engine_char(&matrix[i - 1][j + 1]) {
-        return (true, (i - 1, j + 1));
-    } else if j != 0 && is_engine_char(&matrix[i][j - 1]) {
-        return (true, (i, j - 1));
-    } else if j < n - 1 && is_engine_char(&matrix[i][j + 1]) {
-        return (true, (i, j + 1));
-    } else if i < m - 1 && j != 0 && is_engine_char(&matrix[i + 1][j - 1]) {
-        return (true, (i + 1, j - 1));
-    } else if i < m - 1 && is_engine_char(&matrix[i + 1][j]) {
-        return (true, (i + 1, j));
-    } else if i < m - 1 && j < n - 1 && is_engine_char(&matrix[i + 1][j + 1]) {
-        return (true, (i + 1, j + 1));
-    } else {
-        return (false, (0, 0));
+    let offsets = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
+
+    for &(dx, dy) in offsets.iter() {
+        let ni = i as isize + dx;
+        let nj = j as isize + dy;
+
+        if ni >= 0
+            && ni < m as isize
+            && nj >= 0
+            && nj < n as isize
+            && is_engine_char(&matrix[ni as usize][nj as usize])
+        {
+            return (true, (ni as usize, nj as usize));
+        }
     }
+
+    (false, (0, 0))
 }
 
 pub fn run(input: &str) -> (u32, u32) {
-    let mut matrix: Vec<Vec<char>> = Vec::new();
-
-    for line in input.lines() {
-        let mut v: Vec<char> = Vec::new();
-        for ch in line.chars() {
-            v.push(ch);
-        }
-        matrix.push(v);
-    }
+    let matrix: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
 
     let mut sum = 0;
     let mut gear_info: Vec<((usize, usize), Vec<u32>)> = Vec::new();
@@ -166,5 +159,5 @@ pub fn run(input: &str) -> (u32, u32) {
         }
     }
 
-    return (sum, sum_2);
+    (sum, sum_2)
 }
